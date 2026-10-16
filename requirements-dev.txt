@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Independent AES-GCM verification used by test_app.py.
+pycryptodome==3.23.0

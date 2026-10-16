@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crypto Lab · AES 암·복호화 실습</title>
+  <style>
+    :root { color-scheme: light; --ink:#172b36; --muted:#65777c; --line:#dbe5e5; --teal:#087f72; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f3f6f5; color:var(--ink); font-family:"Malgun Gothic","Segoe UI",sans-serif; font-size:14px; }
+    header { background:white; border-bottom:1px solid var(--line); }
+    .top { max-width:1264px; margin:auto; height:70px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { display:flex; align-items:center; gap:13px; font-size:19px; font-weight:800; letter-spacing:-.6px; }
+    .mark { background:var(--teal); color:white; border-radius:9px; width:34px; height:34px; display:grid; place-items:center; font:700 16px Consolas,monospace; }
+    .divider { height:18px; width:1px; background:var(--line); margin:0 6px; }
+    .small { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:.2px; }
+    .local { display:flex; align-items:center; gap:8px; color:#50686b; font-size:12px; }
+    .dot { width:7px; height:7px; background:#0d997f; border-radius:50%; }
+    main { max-width:1264px; margin:30px auto 20px; }
+    .intro { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:23px; }
+    .eyebrow { font:700 11px "Segoe UI",sans-serif; color:var(--teal); letter-spacing:2px; margin-bottom:8px; }
+    h1 { font-size:32px; letter-spacing:-1.5px; margin:0 0 8px; line-height:1.35; }
+    p { margin:0; line-height:1.7; }
+    .subtitle { color:var(--muted); }
+    .pills { display:flex; gap:7px; margin-bottom:4px; }
+    .pill { background:white; border:1px solid var(--line); border-radius:6px; padding:7px 10px; font:600 11px "Segoe UI",sans-serif; }
+    .flow { display:flex; align-items:center; justify-content:space-between; background:#e7eeec; padding:13px 24px; border-radius:9px; margin-bottom:20px; }
+    .flow span { font-size:12px; font-weight:600; }
+    .flow b { color:var(--teal); margin-right:8px; font:700 12px Consolas,monospace; }
+    .arrow { color:#839997; }
+    .panel { border:1px solid var(--line); border-radius:12px; background:white; overflow:hidden; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; }
+    h2 { font-size:15px; margin:0; letter-spacing:-.4px; }
+    .step { display:inline-grid; place-items:center; width:25px; height:25px; border-radius:6px; background:#e9f4ef; color:var(--teal); margin-right:10px; font:700 11px Consolas,monospace; }
+    .badge { color:#687b7c; background:#f0f4f3; padding:5px 9px; border-radius:5px; font-size:11px; white-space:nowrap; }
+    .badge.pass { background:#e1f4e9; color:#1e7653; }
+    .badge.fail { background:#fff0e6; color:#a65224; }
+    .keys { padding:20px 24px; margin-bottom:18px; }
+    .key-grid { display:grid; grid-template-columns:1fr 44px 1fr; align-items:center; }
+    .key-cell { padding:13px 16px; background:#f5f8f7; border:1px solid #e3eae8; border-radius:7px; min-width:0; }
+    .key-cell label { display:block; font:600 11px "Segoe UI",sans-serif; color:var(--muted); margin-bottom:7px; letter-spacing:.5px; }
+    code { font-family:Consolas,monospace; font-size:13px; overflow-wrap:anywhere; }
+    .exchange { text-align:center; color:var(--teal); font-size:23px; }
+    .key-note { color:var(--muted); font-size:11px; margin-top:11px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .work { padding:22px 24px; }
+    textarea { display:block; width:100%; height:95px; resize:vertical; border:1px solid #cfddda; border-radius:7px; padding:14px; background:#fbfcfc; color:var(--ink); font:14px/1.8 "Malgun Gothic",sans-serif; outline:none; }
+    textarea:focus { border-color:var(--teal); box-shadow:0 0 0 3px #087f7215; }
+    .input-meta { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin:9px 0 16px; }
+    button { border:0; border-radius:7px; background:var(--teal); color:white; font-family:inherit; font-size:13px; font-weight:700; padding:13px 21px; cursor:pointer; width:100%; }
+    button:hover { background:#08685f; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .hint { color:var(--muted); font-size:11px; margin-top:10px; }
+    .dark { background:#172e37; color:#dceee9; }
+    .dark .step { background:#28434a; color:#9bdbc7; }
+    .dark .badge { background:#29444b; color:#bfd6d4; }
+    .cipher-label { color:#9cb7b9; font:600 10px "Segoe UI",sans-serif; letter-spacing:1px; margin:3px 0 9px; }
+    .cipher { display:block; min-height:65px; max-height:100px; overflow:auto; font-size:14px; line-height:1.65; color:#beeadc; margin-bottom:14px; }
+    .field { display:flex; gap:14px; padding-top:10px; margin-top:10px; border-top:1px solid #314952; align-items:baseline; }
+    .field span { flex-shrink:0; width:110px; font-size:11px; color:#aac0c1; }
+    .field code { font-size:12px; }
+    .bottom { margin-top:18px; }
+    .result { min-height:70px; max-height:140px; overflow:auto; padding:13px 15px; border-radius:7px; background:#eff7f2; border:1px solid #dbece2; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.75; }
+    .test { padding:13px 15px; border-radius:7px; background:#faf6f1; border:1px solid #eee3d5; min-height:70px; }
+    .test strong { display:block; font-size:14px; margin-bottom:5px; color:#925d30; }
+    .test p { font-size:12px; color:#857362; }
+    .footer { display:flex; justify-content:space-between; gap:20px; margin-top:17px; color:var(--muted); font-size:10px; line-height:1.7; }
+    #error { color:#ad2d28; background:#fff0ed; border-radius:7px; padding:10px; margin-top:10px; font-size:12px; }
+    [hidden] { display:none !important; }
+    @media(max-width:900px) { .top,main { margin-left:20px; margin-right:20px; } .intro { display:block; } .pills { margin-top:15px; } .grid { grid-template-columns:1fr; } .key-grid { grid-template-columns:1fr; gap:8px; } .exchange { display:none; } .flow { padding:12px; gap:8px; flex-wrap:wrap; } .footer { display:block; } }
+  </style>
+</head>
+<body>
+  <header><div class="top">
+    <div class="brand"><span class="mark">{ }</span>Crypto Lab<span class="divider"></span><span class="small">P.code_crypto · HACKATHON</span></div>
+    <div class="local"><span class="dot"></span>로컬 암호학 실습</div>
+  </div></header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow">ENCRYPT · DECRYPT · VERIFY</div><h1>AES 암·복호화 실습</h1><p class="subtitle">공개키로 키를 교환하고, 메시지를 암호화한 뒤 원문과 무결성을 확인합니다.</p></div>
+      <div class="pills"><span class="pill">Python</span><span class="pill">AES-256-GCM</span><span class="pill">X25519 + HKDF</span></div>
+    </section>
+    <div class="flow"><span><b>01</b>공개키 교환 · AES 키 유도</span><span class="arrow">→</span><span><b>02</b>평문 입력</span><span class="arrow">→</span><span><b>03</b>AES 암호화</span><span class="arrow">→</span><span><b>04</b>복호화 · 변조 탐지</span></div>
+    <section class="panel keys">
+      <div class="panel-head"><h2><span class="step">01</span>Alice ↔ Bob 키 교환</h2><span id="key-status" class="badge">실행 대기</span></div>
+      <div class="key-grid">
+        <div class="key-cell"><label>ALICE · PUBLIC KEY / BASE64</label><code id="alice">실행하면 새로운 공개키가 생성됩니다.</code></div>
+        <div class="exchange">⇄</div>
+        <div class="key-cell"><label>BOB · PUBLIC KEY / BASE64</label><code id="bob">실행하면 새로운 공개키가 생성됩니다.</code></div>
+      </div>
+      <p class="key-note">X25519 공유 비밀 → HKDF-SHA256 → 256-bit AES 키 · 개인키와 AES 키는 화면에 표시하지 않습니다.</p>
+    </section>
+    <div class="grid">
+      <section class="panel work">
+        <div class="panel-head"><h2><span class="step">02</span><label for="message">평문 입력</label></h2><span class="badge">UTF-8</span></div>
+        <textarea id="message" spellcheck="false">안녕하세요! P.code_crypto 해커톤입니다.
+암호화로 메시지를 보호하고, 변조를 탐지합니다.</textarea>
+        <div class="input-meta"><span>한글 · 영문 · 이모지 입력 가능</span><span id="byte-count"></span></div>
+        <button id="run" type="button">암호화 · 복호화 실행 →</button>
+        <p class="hint">매 실행마다 새 키와 nonce를 생성합니다. 빈 문자열도 실험할 수 있습니다.</p>
+        <p id="error" role="alert" hidden></p>
+      </section>
+      <section class="panel work dark">
+        <div class="panel-head"><h2><span class="step">03</span>암호화 결과</h2><span id="cipher-size" class="badge">실행 대기</span></div>
+        <div class="cipher-label">CIPHERTEXT / BASE64</div><code id="cipher" class="cipher">평문을 입력하고 실행 버튼을 눌러 주세요.</code>
+        <div class="field"><span>Nonce · 12 bytes</span><code id="nonce">—</code></div>
+        <div class="field"><span>인증 태그 · 16 bytes</span><code id="tag">—</code></div>
+        <div class="field"><span>HKDF salt · 16 bytes</span><code id="salt">—</code></div>
+      </section>
+    </div>
+    <div class="grid bottom" aria-live="polite">
+      <section class="panel work">
+        <div class="panel-head"><h2><span class="step">04</span>Bob의 복호화 결과</h2><span id="decrypt-status" class="badge">실행 대기</span></div>
+        <div id="recovered" class="result">인증 태그 검증 후 원문을 복원합니다.</div>
+        <p class="hint">Alice의 입력과 Bob의 복호화 결과를 바이트 단위로 비교합니다.</p>
+      </section>
+      <section class="panel work">
+        <div class="panel-head"><h2><span class="step">✓</span>암호문 변조 실험</h2><span id="tamper-status" class="badge">실행 대기</span></div>
+        <div class="test"><strong id="tamper-title">1비트를 바꾸면 어떻게 될까요?</strong><p id="tamper-detail">같은 키로 변조된 데이터를 복호화해 인증 실패를 확인합니다.</p></div>
+        <p class="hint">원본과 별개로 변조한 복사본을 사용합니다. 인증 실패 시 평문을 반환하지 않습니다.</p>
+      </section>
+    </div>
+    <div class="footer"><span>교육용 로컬 시뮬레이션 · Alice와 Bob은 한 프로세스에서 실행됩니다.<br>상대 인증은 포함하지 않으므로 실제 통신의 중간자 공격 방어를 제공하지 않습니다.</span><span id="run-status">Python cryptography 라이브러리 기반 · 실행 대기</span></div>
+  </main>
+  <script>
+    const el = id => document.getElementById(id);
+    const text = (id, value) => { el(id).textContent = value; };
+    const badge = (id, value, passed) => {
+      text(id, value);
+      el(id).className = 'badge ' + (passed ? 'pass' : 'fail');
+    };
+    const updateCount = () => text('byte-count', `${new TextEncoder().encode(el('message').value).length.toLocaleString()} / 4,096 bytes`);
+    el('message').addEventListener('input', () => {
+      updateCount();
+      text('run-status', '입력이 변경되었습니다. 실행 버튼을 누르면 결과가 갱신됩니다.');
+    });
+    updateCount();
+    el('run').addEventListener('click', async () => {
+      el('run').disabled = true;
+      el('message').disabled = true;
+      el('error').hidden = true;
+      text('run-status', 'Python에서 키 교환과 암·복호화를 실행하고 있습니다…');
+      try {
+        const response = await fetch('/api/demo', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({message:el('message').value})
+        });
+        const r = await response.json();
+        if (!response.ok) throw new Error(r.error || '실행 실패');
+        text('alice', r.alice_public); text('bob', r.bob_public);
+        badge('key-status', r.keys_match ? '양측 AES 키 일치' : '키 불일치', r.keys_match);
+        text('cipher', r.ciphertext || '(빈 암호문 — 인증 태그는 생성됨)');
+        text('cipher-size', `${r.ciphertext_bytes} bytes + 16-byte tag`);
+        for (const name of ['nonce','tag','salt']) text(name, r[name]);
+        text('recovered', r.recovered || '(빈 문자열)');
+        badge('decrypt-status', r.round_trip ? '원문과 100% 일치' : '원문 불일치', r.round_trip);
+        badge('tamper-status', r.tamper_rejected ? '변조 탐지 성공' : '변조 탐지 실패', r.tamper_rejected);
+        text('tamper-title', r.tamper_rejected ? 'InvalidTag · 변조된 데이터 복호화 거부' : '예상과 다른 결과: 변조가 허용됨');
+        text('tamper-detail', `${r.tamper_target} 첫 바이트: 0x${r.tamper_byte_before} → 0x${r.tamper_byte_after} · 1비트 변경`);
+        const success = r.keys_match && r.round_trip && r.tamper_rejected;
+        text('run-status', `${new Date().toLocaleTimeString('ko-KR')} · ${success ? '키 교환 / 원문 복원 / 변조 탐지 확인 완료' : '검증 실패: 위 결과를 확인해 주세요.'}`);
+      } catch (error) {
+        text('error', error.message);
+        el('error').hidden = false;
+        text('run-status', '이번 실행 실패 · 기존 결과가 있다면 이전 실행의 결과입니다.');
+      } finally {
+        el('run').disabled = false;
+        el('message').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

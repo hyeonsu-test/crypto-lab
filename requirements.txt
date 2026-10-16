@@ -1,0 +1,5 @@
+# CPython 3.10-3.13; versions match the locally verified environment.
+cryptography==45.0.7
+# Transitive dependencies are pinned for repeatable installation.
+cffi==1.17.1
+pycparser==2.22
